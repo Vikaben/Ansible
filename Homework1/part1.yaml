@@ -1,0 +1,18 @@
+---
+#Part1
+- hosts: tag_Name_Node*
+  tasks: 
+  - name: Creates directory
+    file:
+     path: "{{ item }}"
+     state: directory
+    with_items:
+    - ~/opsschool/ansible
+    - ~/opsschool
+
+  - name: Creates user
+    ansible.builtin.user:
+      name: opschool
+      password: 0p$Sch00l
+      home: /opsschool
+    become : yes 

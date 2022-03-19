@@ -1,0 +1,23 @@
+---
+#part3
+- hosts: tag_Name_Node*
+  tasks:
+    - name: Ansible create file with content
+      copy:
+       dest: "/file.txt"
+       content: |
+            I am a text file I exist on the node
+      become: yes
+
+    - name: Compress directory tgz
+      archive:
+         path: /file.txt
+         dest: /file.tgz
+         remove: True
+      become: yes
+
+    - name: Download index.html
+      get_url:
+        url: http://icanhazip.com/
+        dest: /etc/index.html
+      become: yes

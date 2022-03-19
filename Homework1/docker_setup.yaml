@@ -1,0 +1,68 @@
+#Docker Installetion
+- hosts: tag_Name_Node*
+  become: true
+
+  tasks:
+       - name: Install required system packages
+         apt:
+           name : "{{ item }}" 
+           state : latest
+           update_cache : yes
+         with_items:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+       
+       - name: add GPG key
+         ansible.builtin.apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+       - name: add docker repository to apt
+         apt_repository:
+          repo: deb https://download.docker.com/linux/ubuntu bionic stable
+          state: present
+
+       - name : Install docker
+         ansible.builtin.apt:
+           name: "{{item}}"
+           state: latest
+           update_cache: yes
+         with_items: 
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+
+       - name: Install docker SDK
+         pip:
+           name: docker==4.4.4
+
+       - name: Check if docker started and enabled 
+         service:
+           name: docker
+           state: started
+           enabled: yes
+
+       - name: deploy nginx docker container
+         docker_container:
+          image: nginx:stable
+          name: nginx
+          state: started
+          auto_remove: true
+          ports:
+           - "8080:80"  
+          expose:
+           - 8080     
+
+  handlers:
+    - name: restart docker
+      service: 
+        name: docker 
+        state: restarted
+
+
+
