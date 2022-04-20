@@ -1,0 +1,57 @@
+       - name: add docker repository to apt
+         apt_repository:
+          repo: deb https://download.docker.com/linux/ubuntu bionic stable
+          state: present
+
+       - name : Install docker
+         ansible.builtin.apt:
+           name: "{{item}}"
+           state: latest
+           update_cache: yes
+         with_items:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+
+       - name: Install docker SDK
+         pip:
+           name: docker==4.4.4
+
+       - name: Check if docker started and enabled
+         service:
+           name: docker
+           state: started
+           enabled: yes
+
+       - name: deploy nginx docker container
+         docker_container:
+          image: nginx:stable
+          name: nginx
+          state: started
+          auto_remove: true
+          ports:
+           - "8080:80"
+          expose:
+           - '8080'
+
+       - name: Create home directory for user on ubuntu 
+         file:
+           name: ubuntu
+           path: "/home/ubuntu"
+           state: directory
+
+
+       - name: Add group 'docker_grp' to remote server on ubuntu 
+         group:
+           name: docker_grp
+           gid: 2022
+           state: present
+
+       - name: Add user to remote server on ubuntu 
+         user:
+           name: ubuntu
+           password: "{{ 'docker' | password_hash('sha512') }}"
+           home: /home/ubuntu
+           comment: "ubuntu User"
+           group: docker_grp
+           shell: /bin/bash   

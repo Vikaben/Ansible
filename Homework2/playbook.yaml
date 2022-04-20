@@ -1,0 +1,21 @@
+---
+- hosts: tag_Name_Node*
+  name: Install Docker and ngnix RedHat
+  become: true
+  remote_user: "{{ 'centos' if ( tags['OS'] == 'CentOS') else ('ubuntu') }}"
+  roles:
+           - role: /ansible/roles/redhat
+             when:  ansible_facts['os_family'] == 'RedHat'
+
+
+- hosts: tag_Name_Node*
+  name: Install Docker and ngnix Ubuntu
+  become: true
+  gather_facts: true
+  remote_user: "{{ 'centos' if ( tags['OS'] == 'CentOS') else ('ubuntu') }}"
+  roles:
+           - role: /ansible/roles/ngnix_deploy_ubuntu
+             when: ansible_facts['os_family'] == 'Debian'
+handlers:
+  - include: handlers/main.yml
+

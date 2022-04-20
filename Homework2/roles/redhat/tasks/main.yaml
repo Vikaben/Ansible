@@ -1,0 +1,92 @@
+---
+    - name: Remove docker if installed from CentOS repo
+      yum:
+        name:
+          - docker
+          - docker-client
+          - docker-client-latest
+          - docker-common
+          - docker-latest
+          - docker-latest-logrotate
+          - docker-logrotate
+          - docker-engine
+        state: removed
+
+    - name: Install required packages
+      yum:
+        pkg:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - python3-pip
+          - python3-setuptools
+          - python-docker-py
+        state: latest
+        update_cache: true
+        
+
+    - name: creating a docker repository
+      yum_repository:
+         description: repo for docker
+         name: docker-ce
+         baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+         gpgcheck: no
+
+
+    - name: Install Docker
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+        update_cache: true
+
+    - name: Start Docker
+      ansible.builtin.service:
+        name: "docker"
+        enabled: true
+        state: started
+
+    - name: installing docker SDK
+      pip: 
+       name: docker
+      vars:
+       ansible_python_interpreter: /usr/bin/python3
+
+    - name: deploy nginx docker container
+      docker_container:
+          image: nginx:stable
+          name: nginx
+          state: started
+          auto_remove: true
+          ports:
+           - "8080:80"  
+          expose:
+           - '8080' 
+      vars:
+       ansible_python_interpreter: /bin/python3        
+
+
+
+    - name: Create home directory for user on CentOS 
+      file:
+        name: centos
+        path: "/home/centos"
+        state: directory
+
+
+    - name: Add group 'docker_grp' to remote server on CentOS 
+      group:
+        name: docker_grp
+        gid: 2022
+        state: present
+
+    - name: Add user to remote server on CentOS 
+      user:
+        name: centos
+        password: "{{ 'docker' | password_hash('sha512') }}"
+        home: /home/centos
+        comment: centos User"
+        group: docker_grp
+        shell: /bin/bash
